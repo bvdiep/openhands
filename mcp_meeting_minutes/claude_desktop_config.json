@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "meeting-transcription": {
+      "command": "python",
+      "args": ["/absolute/path/to/your/project/server.py"],
+      "cwd": "/absolute/path/to/your/project",
+      "env": {
+        "PATH": "/absolute/path/to/your/project/.venv/bin:/usr/local/bin:/usr/bin:/bin"
+      }
+    }
+  }
+}
