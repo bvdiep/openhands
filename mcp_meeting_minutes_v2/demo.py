@@ -47,6 +47,15 @@ async def demo_transcription():
         print(json.dumps(result, ensure_ascii=False, indent=2))
         print("=" * 50)
         
+        # Lưu kết quả vào file text cùng đường dẫn với file gốc, chỉ khác đuôi
+        input_path = Path(demo_file)
+        output_file = input_path.with_suffix('.txt')
+        
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(result, f, ensure_ascii=False, indent=2)
+        
+        print(f"\n💾 Đã lưu kết quả vào: {output_file}")
+        
         # Giải thích kết quả
         print()
         print("💡 Giải thích:")
@@ -64,15 +73,6 @@ async def demo_transcription():
     except Exception as e:
         print(f"❌ Lỗi: {e}")
         return False
-    
-    finally:
-        # Xóa file demo
-        try:
-            Path(demo_file).unlink()
-            print(f"🗑️  Đã xóa file demo")
-        except:
-            pass
-
 
 def show_mcp_integration():
     """Hiển thị cách tích hợp với MCP clients"""
