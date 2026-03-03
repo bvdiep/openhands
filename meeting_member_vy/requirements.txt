@@ -1,0 +1,11 @@
+python-dotenv>=1.0.0
+google-genai>=0.8.0
+pydub>=0.25.1
+pyaudio>=0.2.11
+websocket-client>=1.6.0
+pynput
+
+# Lưu ý: Để cài đặt PyAudio, cần cài đặt system dependencies trước:
+# Ubuntu/Debian: sudo apt install portaudio19-dev python3-dev
+# macOS: brew install portaudio
+# Windows: Tự động cài đặt
