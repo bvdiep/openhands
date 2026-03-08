@@ -583,6 +583,7 @@ async def handle_call_tool(tool_name: str, arguments: dict) -> CallToolResult:
                     # Return cached result
                     with open(result_file, "r", encoding="utf-8") as f:
                         result = json.load(f)
+                        result["status"] = "completed"
                     
                     return CallToolResult(
                         content=[TextContent(
