@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Base Styles */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply font-inter antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-inter font-semibold;
+  }
+}
+
+/* Custom Components */
+@layer components {
+  /* Max Mega Menu Plugin Overrides */
+  .mega-menu-wrap,
+  .mega-menu-wrap .mega-menu {
+    @apply font-inter;
+  }
+
+  #mega-menu-wrap-primary #mega-menu-primary {
+    @apply bg-white border-b border-gray-100;
+  }
+
+  #mega-menu-wrap-primary #mega-menu-primary > li.mega-menu-item > a.mega-menu-link {
+    @apply text-base-primary font-medium hover:text-base-accent transition-colors duration-200;
+  }
+
+  #mega-menu-wrap-primary #mega-menu-primary > li.mega-menu-item.mega-current-menu-item > a.mega-menu-link,
+  #mega-menu-wrap-primary #mega-menu-primary > li.mega-menu-item > a.mega-menu-link:hover {
+    @apply text-base-accent;
+  }
+
+  /* Mega Menu Dropdown Styling */
+  .mega-menu-wrap .mega-sub-menu {
+    @apply bg-white shadow-2xl border-t border-gray-100 rounded-b-lg;
+  }
+
+  .mega-menu-wrap .mega-sub-menu li.mega-menu-item a.mega-menu-link {
+    @apply text-gray-700 hover:text-base-accent hover:bg-gray-50 transition-all duration-200;
+  }
+
+  /* Platform Cards */
+  .platform-card {
+    @apply bg-white rounded-xl shadow-card hover:shadow-card-hover transition-all duration-300 transform hover:-translate-y-1;
+  }
+
+  /* Industry Tabs */
+  .industry-tab {
+    @apply px-6 py-3 rounded-full border border-gray-200 hover:border-base-accent hover:text-base-accent transition-all duration-200 cursor-pointer;
+  }
+
+  .industry-tab.active {
+    @apply bg-base-accent text-white border-base-accent;
+  }
+
+  /* CTA Buttons */
+  .cta-button {
+    @apply bg-base-accent text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 inline-flex items-center justify-center;
+  }
+
+  .cta-button-outline {
+    @apply bg-transparent text-base-accent border-2 border-base-accent px-8 py-4 rounded-lg font-semibold hover:bg-base-accent hover:text-white transition-all duration-200;
+  }
+
+  /* Navigation Styles */
+  .primary-menu {
+    @apply flex space-x-8;
+  }
+
+  .primary-menu li a {
+    @apply text-gray-700 hover:text-base-accent font-medium transition-colors duration-200 py-2;
+  }
+
+  .mobile-menu-list {
+    @apply space-y-2;
+  }
+
+  .mobile-menu-list li a {
+    @apply block px-4 py-2 text-gray-700 hover:text-base-accent hover:bg-gray-50 rounded-lg transition-all duration-200;
+  }
+
+  /* Skip Link */
+  .skip-link {
+    @apply absolute -top-10 left-6 bg-base-accent text-white px-4 py-2 rounded-md z-50 focus:top-6 transition-all duration-200;
+  }
+
+  /* Widget Styles */
+  .widget-title {
+    @apply text-lg font-semibold mb-4 text-white;
+  }
+
+  .footer-widget-area ul {
+    @apply space-y-2;
+  }
+
+  .footer-widget-area ul li a {
+    @apply text-gray-300 hover:text-white transition-colors duration-200;
+  }
+}
+
+/* Custom Utilities */
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+  }
+
+  .bg-gradient-primary {
+    @apply bg-gradient-to-br from-blue-50 to-indigo-100;
+  }
+
+  .shadow-glow {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+  }
+
+  .backdrop-blur-xs {
+    backdrop-filter: blur(2px);
+  }
+}
+
+/* Animation Classes */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease-out;
+}
+
+.animate-on-scroll.animated {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Loading States */
+.loading-skeleton {
+  @apply animate-pulse bg-gray-200 rounded;
+}
+
+/* Responsive Utilities */
+@media (max-width: 768px) {
+  .hero-section h1 {
+    @apply text-4xl;
+  }
+  
+  .platform-card {
+    @apply hover:transform-none hover:shadow-card;
+  }
+}

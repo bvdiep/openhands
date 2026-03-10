@@ -1,0 +1,31 @@
+{
+  "name": "bsmlabslp-theme",
+  "version": "1.0.0",
+  "description": "BSMLabs Landing Page WordPress Theme",
+  "main": "index.js",
+  "scripts": {
+    "build-css": "tailwindcss -i ./src/input.css -o ./assets/css/tailwind.css --watch",
+    "build-css-prod": "tailwindcss -i ./src/input.css -o ./assets/css/tailwind.css --minify",
+    "dev": "npm run build-css",
+    "build": "npm run build-css-prod"
+  },
+  "keywords": [
+    "wordpress",
+    "theme",
+    "tailwindcss",
+    "enterprise",
+    "landing-page"
+  ],
+  "author": "BSMLabs Team",
+  "license": "GPL-2.0-or-later",
+  "devDependencies": {
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0"
+  },
+  "dependencies": {
+    "@tailwindcss/aspect-ratio": "^0.4.2",
+    "@tailwindcss/forms": "^0.5.11",
+    "@tailwindcss/typography": "^0.5.19"
+  }
+}
