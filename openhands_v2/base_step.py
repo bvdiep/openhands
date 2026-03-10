@@ -1,0 +1,148 @@
+"""
+Base class for all pipeline steps.
+Provides common functionality and enforces consistent structure.
+"""
+from abc import ABC, abstractmethod
+from typing import Optional, List
+from openhands.sdk import LLM, Conversation, Agent, Tool
+from openhands.tools.browser_use import BrowserToolSet
+from openhands.tools.file_editor import FileEditorTool
+from openhands.tools.terminal import TerminalTool
+
+from config import LLM_CONFIG, get_project_config
+
+
+class BaseStep(ABC):
+    """
+    Base class for all pipeline steps.
+    Each step should inherit from this and implement required methods.
+    """
+    
+    def __init__(self, step_name: str, step_number: int):
+        """
+        Initialize a step.
+        
+        Args:
+            step_name: Human-readable name of the step
+            step_number: Sequential number of the step (01, 02, 03, etc.)
+        """
+        self.step_name = step_name
+        self.step_number = step_number
+        self.llm = None
+        self.agent = None
+        self.conversation = None
+        
+        # Lazy load project configuration
+        self._project_config = None
+    
+    @property
+    def project_config(self):
+        """Lazy load project configuration."""
+        if self._project_config is None:
+            self._project_config = get_project_config()
+        return self._project_config
+    
+    @abstractmethod
+    def get_system_prompt(self) -> str:
+        """
+        Return the system prompt for this step.
+        Must be implemented by each step.
+        """
+        pass
+    
+    @abstractmethod
+    def get_user_prompt(self) -> str:
+        """
+        Return the user prompt/instructions for this step.
+        Must be implemented by each step.
+        """
+        pass
+    
+    def get_tools(self) -> List[Tool]:
+        """
+        Return the list of tools for this step.
+        Can be overridden if a step needs different tools.
+        """
+        return [
+            Tool(name=TerminalTool.name),
+            Tool(name=FileEditorTool.name),
+            Tool(name=BrowserToolSet.name)
+        ]
+    
+    def setup_llm(self) -> LLM:
+        """Initialize and return LLM instance."""
+        self.llm = LLM(
+            model=LLM_CONFIG["model"],
+            api_key=LLM_CONFIG["api_key"],
+            base_url=LLM_CONFIG["base_url"],
+            temperature=LLM_CONFIG["temperature"]
+        )
+        return self.llm
+    
+    def setup_agent(self) -> Agent:
+        """Initialize and return Agent instance."""
+        if not self.llm:
+            self.setup_llm()
+        
+        self.agent = Agent(
+            llm=self.llm,
+            tools=self.get_tools(),
+            system_prompt=self.get_system_prompt()
+        )
+        return self.agent
+    
+    def setup_conversation(self) -> Conversation:
+        """Initialize and return Conversation instance."""
+        if not self.agent:
+            self.setup_agent()
+        
+        self.conversation = Conversation(
+            agent=self.agent,
+            workspace=self.project_config.workspace_path,
+            persistence_dir=self.project_config.persistence_dir,
+            conversation_id=self.project_config.conversation_id
+        )
+        return self.conversation
+    
+    def run(self) -> bool:
+        """
+        Execute the step.
+        
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        print(f"\n{'='*60}")
+        print(f"PROJECT: {self.project_config.project_name}")
+        print(f"STEP {self.step_number:02d}: {self.step_name}")
+        print(f"{'='*60}\n")
+        
+        try:
+            # Setup
+            self.setup_conversation()
+            
+            # Get and send prompt
+            user_prompt = self.get_user_prompt()
+            print(f"--- Đang thực thi: {self.step_name} ---")
+            
+            self.conversation.send_message(user_prompt)
+            self.conversation.run()
+            
+            print(f"\n[Thành công]: {self.step_name} hoàn tất.")
+            print(f"--- Đã tự động lưu trạng thái vào {self.project_config.persistence_dir} ---")
+            
+            return True
+            
+        except Exception as e:
+            import traceback
+            print(f"[Lỗi]: {e}")
+            print(f"Stack trace:\n{traceback.format_exc()}")
+            return False
+            
+        finally:
+            # Cleanup
+            if self.conversation:
+                self.conversation.close()
+            print(f"--- Đã đóng kết nối Step {self.step_number:02d} ---\n")
+    
+    def __str__(self) -> str:
+        return f"Step {self.step_number:02d}: {self.step_name}"
