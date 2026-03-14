@@ -26,7 +26,8 @@ async def demo_transcription():
     
     # Tạo audio demo: 5 giây silence (giả lập cuộc họp)
     # demo_audio = AudioSegment.silent(duration=5000)  # 5 giây
-    demo_file = "/home/dd/Downloads/audio_hop_HMI_20260226_thuyanh_aduc.ogg"
+    # demo_file = "/home/dd/Downloads/audio_hop_HMI_20260226_thuyanh_aduc.ogg"
+    demo_file = "/home/dd/Downloads/20260310-training-healthcare.m4a"
     # demo_audio.export(demo_file, format="wav")
     
     # print(f"📁 Đã tạo file demo: {demo_file}")

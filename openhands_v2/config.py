@@ -77,13 +77,13 @@ class ProjectConfig:
         return f"""
 QUY TẮC GHI NHẬT KÝ BẮT BUỘC:
 1. TRACEABILITY: Sau mỗi hành động quan trọng (truy cập URL, chạy lệnh terminal thành công, tạo file), 
-   bạn PHẢI cập nhật vào file '{self.project_log_filename}'.
-2. STRUCTURE: File '{self.project_log_filename}' phải bao gồm:
+   bạn PHẢI cập nhật vào file '{self.log_full_path}'.
+2. STRUCTURE: File '{self.log_full_path}' phải bao gồm:
    - [Timestamp]: Mô tả ngắn gọn hành động vừa thực hiện.
    - [Outcome]: Kết quả thu được.
    - [Decision]: Lý do bạn chọn giải pháp này.
 3. SNAPSHOTS: Khi phân tích UI, hãy lưu các thông số CSS quan trọng 
-   (colors, spacing, font-family) vào file '{self.style_guide_filename}'.
+   (colors, spacing, font-family) vào file '{self.style_guide_full_path}'.
 """
 
 

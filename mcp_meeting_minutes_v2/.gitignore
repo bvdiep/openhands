@@ -65,3 +65,8 @@ logs/
 *.ogg
 *.aac
 *.wma
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
