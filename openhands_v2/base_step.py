@@ -18,16 +18,18 @@ class BaseStep(ABC):
     Each step should inherit from this and implement required methods.
     """
     
-    def __init__(self, step_name: str, step_number: int):
+    def __init__(self, step_name: str, step_number: int, model: Optional[str] = None):
         """
         Initialize a step.
         
         Args:
             step_name: Human-readable name of the step
             step_number: Sequential number of the step (01, 02, 03, etc.)
+            model: Optional model name to override get_model() (e.g., "openai/gpt-4")
         """
         self.step_name = step_name
         self.step_number = step_number
+        self._model_override = model  # Store model override
         self.llm = None
         self.agent = None
         self.conversation = None
@@ -69,10 +71,42 @@ class BaseStep(ABC):
             Tool(name=BrowserToolSet.name)
         ]
     
+    def get_model(self) -> Optional[str]:
+        """
+        Return the model name for this step.
+        Override this method in subclass to use a different model.
+        
+        Returns:
+            str: Model name (e.g., "openai/gpt-4", "openai/sonnet-4")
+            None: Use default model from LLM_CONFIG
+        
+        Priority (handled by Python inheritance):
+            1. Constructor override (_model_override) - checked in base class
+            2. Subclass override - subclass method replaces this entirely
+            3. None (default) - use LLM_CONFIG["model"]
+        
+        Examples:
+            # Use GPT-4 for this step
+            def get_model(self) -> str:
+                return "openai/gpt-4"
+            
+            # Use default model (don't override)
+            # def get_model(self) -> Optional[str]:
+            #     return None
+        """
+        # If constructor override provided, use it
+        if self._model_override:
+            return self._model_override
+        # Otherwise return None (subclasses can override entire method)
+        return None  # Default: use LLM_CONFIG["model"]
+    
     def setup_llm(self) -> LLM:
         """Initialize and return LLM instance."""
+        # Get model from step-specific config or fallback to default
+        model = self.get_model() or LLM_CONFIG["model"]
+        
         self.llm = LLM(
-            model=LLM_CONFIG["model"],
+            model=model,
             api_key=LLM_CONFIG["api_key"],
             base_url=LLM_CONFIG["base_url"],
             temperature=LLM_CONFIG["temperature"]

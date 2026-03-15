@@ -287,6 +287,97 @@ class ProjectConfig:
     .get_logging_rules()   # Lấy quy tắc logging
 ```
 
+## 🎯 Per-Step Model Configuration
+
+Mỗi step có thể sử dụng model riêng thay vì dùng chung model từ [`LLM_CONFIG`](config.py:101).
+
+### Cách sử dụng
+
+#### Cách 1: Override method `get_model()` (Recommended)
+
+```python
+class Step01Planning(BaseStep):
+    """Planning step using GPT-4 for better reasoning."""
+    
+    def __init__(self):
+        super().__init__(
+            step_name="Planning & Analysis",
+            step_number=1
+        )
+    
+    def get_model(self) -> str:
+        """Use GPT-4 for planning tasks."""
+        return "openai/gpt-4"
+    
+    def get_system_prompt(self) -> str:
+        return "You are a planning expert..."
+    
+    def get_user_prompt(self) -> str:
+        return "Create a detailed plan..."
+```
+
+#### Cách 2: Sử dụng default model
+
+```python
+class Step02Implementation(BaseStep):
+    """Implementation step using default model from LLM_CONFIG."""
+    
+    def __init__(self):
+        super().__init__(
+            step_name="Implementation",
+            step_number=2
+        )
+    
+    # Không override get_model() -> sử dụng LLM_CONFIG["model"]
+    
+    def get_system_prompt(self) -> str:
+        return "You are a coding expert..."
+    
+    def get_user_prompt(self) -> str:
+        return "Implement the features..."
+```
+
+#### Cách 3: Override qua constructor (Flexible)
+
+```python
+class Step03Testing(BaseStep):
+    """Testing step with flexible model configuration."""
+    
+    def __init__(self, model: Optional[str] = None):
+        super().__init__(
+            step_name="Testing",
+            step_number=3,
+            model=model  # Pass to parent
+        )
+    
+    def get_model(self) -> str:
+        """Use constructor override or default to Sonnet-4."""
+        if self._model_override:
+            return self._model_override
+        return "openai/sonnet-4"
+    
+    def get_system_prompt(self) -> str:
+        return "You are a testing expert..."
+    
+    def get_user_prompt(self) -> str:
+        return "Write comprehensive tests..."
+
+# Usage:
+step = Step03Testing(model="openai/gpt-4")  # Override with GPT-4
+step.run()
+```
+
+### Best Practices
+
+- **Planning/Analysis steps**: Sử dụng GPT-4 cho reasoning tốt hơn
+- **Implementation steps**: Sử dụng Sonnet-4 cho code generation tốt hơn
+- **Simple tasks**: Sử dụng GPT-3.5-turbo để tiết kiệm chi phí
+- **Default**: Không override nếu muốn dùng model mặc định từ LLM_CONFIG
+
+### Example File
+
+Xem [`projects/_template/step_example_custom_model.py`](projects/_template/step_example_custom_model.py) để biết thêm ví dụ chi tiết.
+
 ## 🎯 Lợi ích
 
 1. **Reusability**: Core components được tái sử dụng cho nhiều dự án
