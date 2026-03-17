@@ -14,6 +14,9 @@ class TaskRunner:
         self,
         workspace: str,
         model: Optional[str] = None,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+        temperature: Optional[float] = None,
         tools: Optional[List[Tool]] = None,
         agent_name: str = "OpenHands-Agent",
         mcp_config: Optional[Dict[str, Any]] = None,
@@ -32,6 +35,9 @@ class TaskRunner:
         """
         self.workspace = os.path.abspath(workspace)
         self.model = model or LLM_CONFIG.get("model")
+        self.base_url = base_url or LLM_CONFIG.get("base_url")
+        self.api_key = api_key or LLM_CONFIG.get("api_key")
+        self.temperature = temperature if temperature is not None else LLM_CONFIG.get("temperature", 0.0)
         
         # Default tools if none provided
         self.tools = tools if tools is not None else [
@@ -43,9 +49,9 @@ class TaskRunner:
         # Initialize LLM using shared config
         self.llm = LLM(
             model=self.model,
-            base_url=LLM_CONFIG.get("base_url"),
-            api_key=LLM_CONFIG.get("api_key"),
-            temperature=LLM_CONFIG.get("temperature", 0.0),
+            base_url=self.base_url,
+            api_key=self.api_key,
+            temperature=self.temperature,
         )
         
         # Setup Agent

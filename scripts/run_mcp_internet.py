@@ -1,4 +1,6 @@
 import os
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from engine.runner import run_task
 
 # 1. Cấu hình
@@ -30,5 +32,7 @@ if __name__ == "__main__":
         task_prompt=task_prompt,
         workspace=cwd,
         model="openai/sonnet-4",
+        api_key=os.getenv("LITELLM_KEY", "no-key"),
+        base_url="http://localhost:4000/v1",
         success_message="Nhiệm vụ hoàn tất! Kiểm tra thư mục mcp_internet."
     )

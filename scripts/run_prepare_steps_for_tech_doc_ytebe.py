@@ -1,7 +1,14 @@
+import os
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from engine.runner import run_task
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # 1. Cấu hình
-cwd = "/home/dd/work/diep/openhands/projects/hcbe_techdocs"
+cwd = "/home/dd/work/diep/openhands/projects/hcapi_techdocs"
 sample_templates = "/home/dd/work/diep/openhands/projects/_template"
 be_root = "/home/dd/work/codes/HEALTHCARE/healthcare-api"
 
@@ -14,12 +21,12 @@ Nhiệm vụ: Thiết lập hệ thống Steps và Pipeline trong {cwd} để ch
 Yêu cầu nghiêm ngặt: Bạn CHỈ tạo ra file cấu hình và code điều khiển (meta-coding), KHÔNG trực tiếp thực thi các tác vụ scan code hay viết tài liệu.
 
 Các bước thực hiện:
-1. Tạo ra file {cwd}/project_config.py dựa theo mẫu trong {sample_templates}/project_config.py. Trong file này, bạn cần các trường bắt buộc gồm project_name (hãy lấy hcbe_techdoc) và workspace_subdir (cũng hãy lấy hcbe_techdoc). Vì chúng ta chuẩn bị review nên techstack sẽ chưa có.
+1. Tạo ra file {cwd}/project_config.py dựa theo mẫu trong {sample_templates}/project_config.py. Trong file này, bạn cần các trường bắt buộc gồm project_name (hãy lấy hcapi_techdoc) và workspace_subdir (cũng hãy lấy hcapi_techdoc). Vì chúng ta chuẩn bị review nên techstack sẽ chưa có.
 2. Tạo các steps dựa theo templates. Chú ý đến một số tham số sau.
     - Thư mục của project BE cần làm tài liệu kỹ thuật là {be_root}, điều này quan trọng cần đưa vào prompting.
-    - Tạo ra các steps theo mẫu ExampleStepWithGPT4() ở trong {sample_templates}/step_example_custom_model.py. Hãy sử dụng gemini/gemini-3-flash-preview là model cho tất cả các steps.
+    - Tạo ra các steps theo mẫu ExampleStepWithGPT4() ở trong {sample_templates}/step_example_custom_model.py. Hãy sử dụng gemini/gemini-3.1-pro-preview là model cho tất cả các steps.
     - Các prompts cần chú ý nhắc nhở không scan các files ở .gitignore để tránh lãng phí token.
-    - Tài liệu cần có 3 loại: Architect, Api specification và Database schema
+    - Tài liệu cần có 3 loại: Architect, Api specification và Database schema. Tất cả các tài liệu cần thực hiện tương ứng với đầy đủ source code, không bỏ qua module nào.
     - Tài liệu cần có định dạng markdown
     - Các hình vẽ sử dụng mermaid nhúng trực tiếp trong tài liệu markdown để tôi có thể xử lý view được bằng quarto.
     - Cần chú ý bước lập kế hoạch trước khi thực hiện để đảm bảo độ chính xác.
@@ -33,5 +40,7 @@ if __name__ == "__main__":
         task_prompt=task_prompt,
         workspace=cwd,
         model="openai/sonnet-4",
+        api_key=os.getenv("LITELLM_KEY", "no-key"),
+        base_url="http://localhost:4000/v1",
         success_message="Nhiệm vụ hoàn tất! Kiểm tra code"
     )
