@@ -41,15 +41,16 @@ class ProjectConfig:
         self.conversation_id = uuid.uuid5(uuid.NAMESPACE_DNS, project_name)
         
         # Directory Structure
-        self.base_dir = os.path.dirname(os.path.abspath(__file__))
+        self.engine_dir = os.path.dirname(os.path.abspath(__file__))
+        self.base_dir = os.path.dirname(self.engine_dir)
         
         # Workspace for this specific project
         workspace_name = workspace_subdir or project_name
-        self.workspace_path = os.path.join(self.base_dir, "workspace", workspace_name)
+        self.workspace_path = os.path.join(self.base_dir, "workspaces", workspace_name)
         self.metadata_path = os.path.join(self.workspace_path, ".metadata")
         
         # Shared persistence directory (organized by conversation_id)
-        self.persistence_dir = os.path.join(self.base_dir, ".conversations")
+        self.persistence_dir = os.path.join(self.engine_dir, ".conversations")
         
         # File Names (can be overridden by subclass)
         self.plan_filename = "PROJECT_PLAN.md"
@@ -112,7 +113,7 @@ def get_api_key() -> str:
 # Gọi Gemini trực tiếp
 LLM_CONFIG: Dict[str, Any] = {
     "model": "gemini/gemini-3-flash-preview",
-    "api_key": "AIzaSyC7RV2_peXeI-0HiESYl6ApgPO9ZBUj6hM",  # Fails fast if not set
+    "api_key": os.getenv("GEMINI_API_KEY", "no-gemini-api-key"),  # Fails fast if not set
     "base_url": None,
     "temperature": 0.0
 }

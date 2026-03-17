@@ -6,7 +6,7 @@ This is a shared module - each project should have its own pipeline.py that uses
 import sys
 from typing import Dict, List, Optional, Type
 
-from base_step import BaseStep
+from .base_step import BaseStep
 
 
 class StepRegistry:

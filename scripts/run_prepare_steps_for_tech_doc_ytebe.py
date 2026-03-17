@@ -1,8 +1,8 @@
-from openhands_operation.runner import run_task
+from engine.runner import run_task
 
 # 1. Cấu hình
-cwd = "/home/dd/work/diep/openhands/openhands_operation/projects/hcbe_techdocs"
-sample_templates = "/home/dd/work/diep/openhands/openhands_operation/projects/_template"
+cwd = "/home/dd/work/diep/openhands/projects/hcbe_techdocs"
+sample_templates = "/home/dd/work/diep/openhands/projects/_template"
 be_root = "/home/dd/work/codes/HEALTHCARE/healthcare-api"
 
 # 2. Nhiệm vụ

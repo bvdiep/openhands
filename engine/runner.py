@@ -121,7 +121,7 @@ def run_task(task_prompt: str, **kwargs):
     # Check if workspace is provided
     if 'workspace' not in kwargs:
         # Try to infer workspace or use default
-        kwargs['workspace'] = os.path.join(os.getcwd(), "workspace", "default")
+        kwargs['workspace'] = os.path.join(os.getcwd(), "workspaces", "default")
         
     runner = TaskRunner(**kwargs)
     return runner.run(task_prompt, success_message=success_msg)

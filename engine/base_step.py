@@ -9,7 +9,7 @@ from openhands.tools.browser_use import BrowserToolSet
 from openhands.tools.file_editor import FileEditorTool
 from openhands.tools.terminal import TerminalTool
 
-from config import LLM_CONFIG, get_project_config
+from .config import LLM_CONFIG, get_project_config
 
 
 class BaseStep(ABC):
@@ -165,12 +165,12 @@ class BaseStep(ABC):
                     "servers": {
                         "internet-search": {
                             "type": "stdio",
-                            "command": "/home/dd/work/diep/openhands/mcp_internet/.venv/bin/python",
-                            "args": ["/home/dd/work/diep/openhands/mcp_internet/server.py"],
+                            "command": os.path.join(os.getcwd(), "apps", "mcp_internet", ".venv", "bin", "python"),
+                            "args": [os.path.join(os.getcwd(), "apps", "mcp_internet", "server.py")],
                             "env": {
                                 "SERPER_API_KEY": os.getenv("SERPER_API_KEY", ""),
                                 "VOYAGE_API_KEY": os.getenv("VOYAGE_API_KEY", ""),
-                                "PYTHONPATH": "/home/dd/work/diep/openhands/mcp_internet"
+                                "PYTHONPATH": os.path.join(os.getcwd(), "apps", "mcp_internet")
                             }
                         }
                     }

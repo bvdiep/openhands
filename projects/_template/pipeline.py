@@ -8,14 +8,14 @@ from pathlib import Path
 parent_dir = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(parent_dir))
 
-from config import set_project_config
+from engine.config import set_project_config
 from project_config import project_config
 
 # Set the project configuration before importing pipeline
 set_project_config(project_config)
 
 # Now import and use the shared pipeline
-from pipeline import PipelineRunner, StepRegistry
+from engine.pipeline import PipelineRunner, StepRegistry
 
 
 class SampleProjectStepRegistry(StepRegistry):

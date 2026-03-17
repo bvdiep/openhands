@@ -1,6 +1,6 @@
 # Refactoring Plan: Unified Task Runner
 
-This plan outlines the design and implementation of a reusable runner in `openhands_operation/runner.py` to eliminate boilerplate code in `run_*.py` scripts.
+This plan outlines the design and implementation of a reusable runner in `engine/runner.py` to eliminate boilerplate code in `run_*.py` scripts.
 
 ## 1. Problem Statement
 Existing `run_*.py` files contain significant boilerplate code (approx. 50-60 lines each) for:
@@ -11,7 +11,7 @@ Existing `run_*.py` files contain significant boilerplate code (approx. 50-60 li
 - Manual logging/printing of status.
 
 ## 2. Proposed Solution
-Create a centralized `TaskRunner` class and a `run_task` convenience function in `openhands_operation/runner.py`.
+Create a centralized `TaskRunner` class and a `run_task` convenience function in `engine/runner.py`.
 
 ### 2.1 Core Components
 - **`TaskRunner` Class**: Encapsulates the configuration and execution logic.
@@ -26,7 +26,7 @@ The runner will automate the following flow:
 4. **Execution**: Execute the agent's action loop until completion.
 5. **Reporting**: Provide clear success/failure feedback and clean up resources (close conversation).
 
-## 3. Proposed API Design (`openhands_operation/runner.py`)
+## 3. Proposed API Design (`engine/runner.py`)
 
 ```python
 from typing import List, Optional, Dict, Any
@@ -109,6 +109,12 @@ def run_task(task_prompt: str, **kwargs):
         run_task(task_prompt="...", workspace="./path", model="...")
     """
     success_msg = kwargs.pop('success_message', "Nhiệm vụ hoàn tất!")
+    
+    # Check if workspace is provided
+    if 'workspace' not in kwargs:
+        # Default to workspaces/ directory at project root
+        kwargs['workspace'] = os.path.join(os.getcwd(), "workspaces", "default")
+        
     runner = TaskRunner(**kwargs)
     return runner.run(task_prompt, success_message=success_msg)
 ```
@@ -123,7 +129,7 @@ from openhands.sdk import LLM, Agent, Conversation, Tool
 
 llm = LLM(model="openai/sonnet-4", ...)
 agent = Agent(llm=llm, tools=[...])
-cwd = os.path.join(os.getcwd(), "mcp_internet")
+cwd = os.path.join(os.getcwd(), "workspaces", "mcp_internet")
 # ... manual dir creation ...
 conversation = Conversation(agent=agent, workspace=cwd)
 
@@ -139,7 +145,7 @@ except Exception as e:
 
 ### After (Estimated 10-15 lines)
 ```python
-from openhands_operation.runner import run_task
+from engine.runner import run_task
 
 run_task(
     workspace="./mcp_internet",
@@ -158,7 +164,7 @@ run_task(
 4. **Readability**: Focus on the *task* (prompt and workspace) rather than the plumbing.
 
 ## 6. Implementation Steps
-1. Create `openhands_operation/runner.py`.
+1. Create `engine/runner.py`.
 2. Update `openhands_operation/config.py` to ensure all necessary defaults are exposed.
 3. Refactor one `run_*.py` file as a pilot.
 4. Batch refactor remaining `run_*.py` files.

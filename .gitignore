@@ -16,4 +16,7 @@ __pycache__/
 *.swo
 *~
 
-openhands_operation/workspace
+# Workspace
+workspaces/
+engine/workspace/
+openhands_operation/workspace/

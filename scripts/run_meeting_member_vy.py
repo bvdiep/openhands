@@ -1,8 +1,8 @@
 import os
-from openhands_operation.runner import run_task
+from engine.runner import run_task
 
 # 1. Cấu hình
-cwd = os.path.join(os.getcwd(), "meeting_member_vy")
+cwd = os.path.join(os.getcwd(), "apps", "meeting_member_vy")
 
 # 2. Nhiệm vụ
 task_prompt = """
