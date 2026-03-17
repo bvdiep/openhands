@@ -55,7 +55,7 @@ cloudflare-workers/
 
 ### Chạy toàn bộ pipeline:
 ```bash
-cd /home/dd/work/diep/openhands/openhands_v2/projects/cloudflare-workers
+cd /home/dd/work/diep/openhands/openhands_operation/projects/cloudflare-workers
 python pipeline.py run all
 ```
 

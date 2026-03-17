@@ -1,5 +1,5 @@
 import os
-from openhands_v2.runner import run_task
+from openhands_operation.runner import run_task
 
 # 1. Cấu hình
 cwd = os.path.join(os.getcwd(), "meeting_member_vy")

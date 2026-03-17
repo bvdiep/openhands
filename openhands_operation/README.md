@@ -5,7 +5,7 @@ Hệ thống pipeline được refactor để hỗ trợ nhiều dự án, mỗi
 ## 🏗️ Cấu trúc mới
 
 ```
-openhands_v2/
+openhands_operation/
 ├── config.py                    # Cấu hình chung (LLM, ProjectConfig class)
 ├── base_step.py                 # Base class cho tất cả steps
 ├── pipeline.py                  # Shared pipeline runner

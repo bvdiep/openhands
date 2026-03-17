@@ -2,11 +2,11 @@
 
 ## 📋 Tổng quan
 
-Tài liệu này mô tả kế hoạch chi tiết để tích hợp Model Context Protocol (MCP) vào [`openhands_v2/base_step.py`](../openhands_v2/base_step.py), cho phép mỗi step có thể sử dụng MCP servers như internet-search.
+Tài liệu này mô tả kế hoạch chi tiết để tích hợp Model Context Protocol (MCP) vào [`openhands_operation/base_step.py`](../openhands_operation/base_step.py), cho phép mỗi step có thể sử dụng MCP servers như internet-search.
 
 ## 🎯 Mục tiêu
 
-Bổ sung khả năng MCP vào [`BaseStep`](../openhands_v2/base_step.py) để:
+Bổ sung khả năng MCP vào [`BaseStep`](../openhands_operation/base_step.py) để:
 - Mỗi step có thể định nghĩa MCP servers riêng
 - Tích hợp MCP servers như một phần của agent configuration
 - Hỗ trợ nhiều loại MCP transport (stdio, SSE, HTTP)

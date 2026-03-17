@@ -1,8 +1,8 @@
-from openhands_v2.runner import run_task
+from openhands_operation.runner import run_task
 
 # 1. Cấu hình
-cwd = "/home/dd/work/diep/openhands/openhands_v2/projects/hplms_techdocs"
-sample_templates = "/home/dd/work/diep/openhands/openhands_v2/projects/_template"
+cwd = "/home/dd/work/diep/openhands/openhands_operation/projects/hplms_techdocs"
+sample_templates = "/home/dd/work/diep/openhands/openhands_operation/projects/_template"
 be_root = "/home/dd/work/codes/HP/hp-lms-be"
 
 # 2. Nhiệm vụ

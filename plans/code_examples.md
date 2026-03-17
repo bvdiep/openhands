@@ -14,7 +14,7 @@ from pathlib import Path
 parent_dir = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(parent_dir))
 
-from openhands_v2.base_step import BaseStep
+from openhands_operation.base_step import BaseStep
 
 
 class Step01PlanningWithGPT4(BaseStep):
@@ -115,7 +115,7 @@ from pathlib import Path
 parent_dir = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(parent_dir))
 
-from openhands_v2.base_step import BaseStep
+from openhands_operation.base_step import BaseStep
 
 
 class Step02ImplementationDefault(BaseStep):
@@ -197,7 +197,7 @@ from typing import Optional
 parent_dir = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(parent_dir))
 
-from openhands_v2.base_step import BaseStep
+from openhands_operation.base_step import BaseStep
 
 
 class Step03TestingFlexible(BaseStep):
@@ -306,7 +306,7 @@ from pathlib import Path
 parent_dir = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(parent_dir))
 
-from openhands_v2.base_step import BaseStep
+from openhands_operation.base_step import BaseStep
 
 
 class Step01Planning(BaseStep):
@@ -424,7 +424,7 @@ from typing import Optional
 parent_dir = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(parent_dir))
 
-from openhands_v2.base_step import BaseStep
+from openhands_operation.base_step import BaseStep
 
 
 class SmartStep(BaseStep):

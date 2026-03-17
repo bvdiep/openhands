@@ -1,6 +1,6 @@
 # Refactoring Plan: Unified Task Runner
 
-This plan outlines the design and implementation of a reusable runner in `openhands_v2/runner.py` to eliminate boilerplate code in `run_*.py` scripts.
+This plan outlines the design and implementation of a reusable runner in `openhands_operation/runner.py` to eliminate boilerplate code in `run_*.py` scripts.
 
 ## 1. Problem Statement
 Existing `run_*.py` files contain significant boilerplate code (approx. 50-60 lines each) for:
@@ -11,12 +11,12 @@ Existing `run_*.py` files contain significant boilerplate code (approx. 50-60 li
 - Manual logging/printing of status.
 
 ## 2. Proposed Solution
-Create a centralized `TaskRunner` class and a `run_task` convenience function in `openhands_v2/runner.py`.
+Create a centralized `TaskRunner` class and a `run_task` convenience function in `openhands_operation/runner.py`.
 
 ### 2.1 Core Components
 - **`TaskRunner` Class**: Encapsulates the configuration and execution logic.
 - **`run_task` Function**: A simplified entry point for functional-style usage.
-- **Default Integration**: Automatically uses settings from `openhands_v2/config.py`.
+- **Default Integration**: Automatically uses settings from `openhands_operation/config.py`.
 
 ### 2.2 The 5-Step Execution Flow
 The runner will automate the following flow:
@@ -26,7 +26,7 @@ The runner will automate the following flow:
 4. **Execution**: Execute the agent's action loop until completion.
 5. **Reporting**: Provide clear success/failure feedback and clean up resources (close conversation).
 
-## 3. Proposed API Design (`openhands_v2/runner.py`)
+## 3. Proposed API Design (`openhands_operation/runner.py`)
 
 ```python
 from typing import List, Optional, Dict, Any
@@ -139,7 +139,7 @@ except Exception as e:
 
 ### After (Estimated 10-15 lines)
 ```python
-from openhands_v2.runner import run_task
+from openhands_operation.runner import run_task
 
 run_task(
     workspace="./mcp_internet",
@@ -158,7 +158,7 @@ run_task(
 4. **Readability**: Focus on the *task* (prompt and workspace) rather than the plumbing.
 
 ## 6. Implementation Steps
-1. Create `openhands_v2/runner.py`.
-2. Update `openhands_v2/config.py` to ensure all necessary defaults are exposed.
+1. Create `openhands_operation/runner.py`.
+2. Update `openhands_operation/config.py` to ensure all necessary defaults are exposed.
 3. Refactor one `run_*.py` file as a pilot.
 4. Batch refactor remaining `run_*.py` files.

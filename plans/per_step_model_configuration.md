@@ -2,7 +2,7 @@
 
 ## 📋 Tổng quan
 
-Hiện tại, tất cả các steps trong pipeline đều sử dụng chung một model được định nghĩa trong [`LLM_CONFIG`](../openhands_v2/config.py:101). Yêu cầu là cho phép mỗi step có thể sử dụng model riêng, linh hoạt hơn trong việc chọn model phù hợp với từng tác vụ cụ thể.
+Hiện tại, tất cả các steps trong pipeline đều sử dụng chung một model được định nghĩa trong [`LLM_CONFIG`](../openhands_operation/config.py:101). Yêu cầu là cho phép mỗi step có thể sử dụng model riêng, linh hoạt hơn trong việc chọn model phù hợp với từng tác vụ cụ thể.
 
 ## 🎯 Mục tiêu
 
@@ -15,11 +15,11 @@ Hiện tại, tất cả các steps trong pipeline đều sử dụng chung mộ
 
 ### File cần sửa đổi:
 
-1. **[`base_step.py`](../openhands_v2/base_step.py)** - Base class cho tất cả steps
+1. **[`base_step.py`](../openhands_operation/base_step.py)** - Base class cho tất cả steps
    - Dòng 72-80: Method `setup_llm()` - Khởi tạo LLM với config cố định
    - Dòng 21-36: Constructor `__init__()` - Khởi tạo step
 
-2. **[`config.py`](../openhands_v2/config.py)** - Shared configuration
+2. **[`config.py`](../openhands_operation/config.py)** - Shared configuration
    - Dòng 101-106: `LLM_CONFIG` - Default LLM configuration
 
 ### Luồng hoạt động hiện tại:
@@ -244,7 +244,7 @@ step.run()
 ## 🚀 Implementation Steps
 
 1. ✅ **Phân tích cấu trúc hiện tại**
-   - Đã xác định các file cần sửa: [`base_step.py`](../openhands_v2/base_step.py), [`config.py`](../openhands_v2/config.py)
+   - Đã xác định các file cần sửa: [`base_step.py`](../openhands_operation/base_step.py), [`config.py`](../openhands_operation/config.py)
    - Đã hiểu rõ luồng hoạt động hiện tại
 
 2. **Cập nhật BaseStep**
@@ -258,7 +258,7 @@ step.run()
    - Tạo example step với constructor override
 
 4. **Cập nhật documentation**
-   - Cập nhật [`README.md`](../openhands_v2/README.md) với hướng dẫn sử dụng
+   - Cập nhật [`README.md`](../openhands_operation/README.md) với hướng dẫn sử dụng
    - Thêm section về per-step model configuration
    - Thêm examples và best practices
 
