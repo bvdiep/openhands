@@ -3,7 +3,7 @@ Base class for all pipeline steps.
 Provides common functionality and enforces consistent structure.
 """
 from abc import ABC, abstractmethod
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from openhands.sdk import LLM, Conversation, Agent, Tool
 from openhands.tools.browser_use import BrowserToolSet
 from openhands.tools.file_editor import FileEditorTool
@@ -16,6 +16,23 @@ class BaseStep(ABC):
     """
     Base class for all pipeline steps.
     Each step should inherit from this and implement required methods.
+    
+    MCP Support:
+        Override get_mcp_config() to enable MCP servers for this step.
+        Example:
+            def get_mcp_config(self) -> Dict[str, Any]:
+                return {
+                    "servers": {
+                        "internet-search": {
+                            "type": "stdio",
+                            "command": "/path/to/python",
+                            "args": ["/path/to/server.py"],
+                            "env": {
+                                "API_KEY": "value"
+                            }
+                        }
+                    }
+                }
     """
     
     def __init__(self, step_name: str, step_number: int, model: Optional[str] = None):
@@ -113,16 +130,80 @@ class BaseStep(ABC):
         )
         return self.llm
     
+    def get_mcp_config(self) -> Optional[Dict[str, Any]]:
+        """
+        Return MCP (Model Context Protocol) configuration for this step.
+        Override this method to enable MCP servers for this step.
+        
+        Returns:
+            Dict[str, Any]: MCP configuration with servers
+                Example:
+                {
+                    "servers": {
+                        "server-name": {
+                            "type": "stdio",  # or "sse", "http"
+                            "command": "/path/to/python",
+                            "args": ["/path/to/server.py"],
+                            "env": {
+                                "KEY": "value"
+                            },
+                            # For sse/http:
+                            "url": "http://example.com/mcp",
+                            "headers": {
+                                "Authorization": "Bearer token"
+                            }
+                        }
+                    }
+                }
+            None: No MCP servers needed (default)
+        
+        Examples:
+            # Example 1: Internet Search MCP
+            def get_mcp_config(self) -> Dict[str, Any]:
+                import os
+                return {
+                    "servers": {
+                        "internet-search": {
+                            "type": "stdio",
+                            "command": "/home/dd/work/diep/openhands/mcp_internet/.venv/bin/python",
+                            "args": ["/home/dd/work/diep/openhands/mcp_internet/server.py"],
+                            "env": {
+                                "SERPER_API_KEY": os.getenv("SERPER_API_KEY", ""),
+                                "VOYAGE_API_KEY": os.getenv("VOYAGE_API_KEY", ""),
+                                "PYTHONPATH": "/home/dd/work/diep/openhands/mcp_internet"
+                            }
+                        }
+                    }
+                }
+            
+            # Example 2: No MCP (default)
+            # Don't override this method or return None
+        
+        # Example 3: Multiple MCP servers
+        # Add more servers to the "servers" dict
+        """
+        return None  # Default: no MCP servers
+    
     def setup_agent(self) -> Agent:
-        """Initialize and return Agent instance."""
+        """Initialize and return Agent instance with MCP support."""
         if not self.llm:
             self.setup_llm()
         
-        self.agent = Agent(
-            llm=self.llm,
-            tools=self.get_tools(),
-            system_prompt=self.get_system_prompt()
-        )
+        # Get MCP configuration if available
+        mcp_config = self.get_mcp_config()
+        
+        # Build agent kwargs
+        agent_kwargs = {
+            "llm": self.llm,
+            "tools": self.get_tools(),
+            "system_prompt": self.get_system_prompt()
+        }
+        
+        # Add MCP config if provided
+        if mcp_config:
+            agent_kwargs["mcp_config"] = mcp_config
+        
+        self.agent = Agent(**agent_kwargs)
         return self.agent
     
     def setup_conversation(self) -> Conversation:

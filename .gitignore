@@ -15,3 +15,5 @@ __pycache__/
 *.swp
 *.swo
 *~
+
+openhands_v2/workspace
