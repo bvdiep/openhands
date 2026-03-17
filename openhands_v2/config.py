@@ -98,10 +98,18 @@ def get_api_key() -> str:
         )
     return api_key
 
+# Gọi litellm proxy
+# LLM_CONFIG: Dict[str, Any] = {
+#     "model": "openai/sonnet-4",
+#     "api_key": get_api_key(),  # Fails fast if not set
+#     "base_url": "http://localhost:4000/v1",
+#     "temperature": 0.0
+# }
+# Gọi Gemini trực tiếp
 LLM_CONFIG: Dict[str, Any] = {
-    "model": "openai/sonnet-4",
-    "api_key": get_api_key(),  # Fails fast if not set
-    "base_url": "http://localhost:4000/v1",
+    "model": "gemini/gemini-3-flash-preview",
+    "api_key": "AIzaSyC7RV2_peXeI-0HiESYl6ApgPO9ZBUj6hM",  # Fails fast if not set
+    "base_url": None,
     "temperature": 0.0
 }
 
