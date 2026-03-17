@@ -6,6 +6,10 @@ Project-specific settings should be in project_config.py files.
 import os
 import uuid
 from typing import Dict, Any, Optional
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 
 class ProjectConfig:
