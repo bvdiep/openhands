@@ -1,0 +1,19 @@
+[project]
+name = "mcp_gen_img_face_ref"
+version = "0.1.0"
+description = "MCP Server for generating images with face reference"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp[cli]",
+    "python-dotenv",
+    "google-genai",
+    "httpx",
+    "pillow"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]

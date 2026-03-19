@@ -165,12 +165,12 @@ class BaseStep(ABC):
                     "servers": {
                         "internet-search": {
                             "type": "stdio",
-                            "command": os.path.join(os.getcwd(), "apps", "mcp_internet", ".venv", "bin", "python"),
-                            "args": [os.path.join(os.getcwd(), "apps", "mcp_internet", "server.py")],
+                            "command": os.path.join(os.getcwd(), "..", "apps", "mcp_internet", ".venv", "bin", "python"),
+                            "args": [os.path.join(os.getcwd(), "..", "apps", "mcp_internet", "server.py")],
                             "env": {
                                 "SERPER_API_KEY": os.getenv("SERPER_API_KEY", ""),
                                 "VOYAGE_API_KEY": os.getenv("VOYAGE_API_KEY", ""),
-                                "PYTHONPATH": os.path.join(os.getcwd(), "apps", "mcp_internet")
+                                "PYTHONPATH": os.path.join(os.getcwd(), "..", "apps", "mcp_internet")
                             }
                         }
                     }

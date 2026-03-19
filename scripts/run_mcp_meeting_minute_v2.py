@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from engine.runner import run_task
 
 # 1. Cấu hình
-cwd = os.path.join(os.getcwd(), "apps", "mcp_meeting_minutes_v2")
+cwd = os.path.join(os.getcwd(), "..", "apps", "mcp_meeting_minutes_v2")
 
 # 2. Nhiệm vụ
 task_prompt = """
