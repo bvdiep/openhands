@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Danh sách CCCD</h2>
+    <div>
+        <a href="{{ url_for('upload') }}" class="btn btn-success me-2">Thêm mới</a>
+        <a href="{{ url_for('logout') }}" class="btn btn-danger">Đăng xuất</a>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-bordered align-middle">
+        <thead class="table-dark">
+            <tr>
+                <th>ID</th>
+                <th>Họ tên</th>
+                <th>Số CCCD</th>
+                <th>Ngày sinh</th>
+                <th>Địa chỉ</th>
+                <th>Ngày cấp</th>
+                <th>Nơi cấp</th>
+                <th>Ảnh mặt trước</th>
+                <th>Ảnh mặt sau</th>
+                <th>Trạng thái</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for citizen in citizens %}
+            <tr>
+                <td>{{ citizen.id }}</td>
+                <td>{{ citizen.fullname }}</td>
+                <td>{{ citizen.id_number }}</td>
+                <td>{{ citizen.dob }}</td>
+                <td>{{ citizen.address }}</td>
+                <td>{{ citizen.issue_date }}</td>
+                <td>{{ citizen.issue_place }}</td>
+                <td>
+                    <img src="{{ url_for('static', filename='uploads/' + citizen.photo_1) }}" class="thumbnail img-thumbnail" data-bs-toggle="modal" data-bs-target="#imageModal" data-img-src="{{ url_for('static', filename='uploads/' + citizen.photo_1) }}" alt="Mặt trước">
+                </td>
+                <td>
+                    <img src="{{ url_for('static', filename='uploads/' + citizen.photo_2) }}" class="thumbnail img-thumbnail" data-bs-toggle="modal" data-bs-target="#imageModal" data-img-src="{{ url_for('static', filename='uploads/' + citizen.photo_2) }}" alt="Mặt sau">
+                </td>
+                <td>
+                    <span class="badge bg-success">{{ citizen.status }}</span>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="10" class="text-center">Chưa có dữ liệu CCCD nào.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal for Image Viewing -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imageModalLabel">Xem ảnh CCCD</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img src="" id="modalImage" class="img-fluid rounded" alt="Ảnh lớn">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var imageModal = document.getElementById('imageModal');
+        imageModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var imgSrc = button.getAttribute('data-img-src');
+            var modalImage = imageModal.querySelector('#modalImage');
+            modalImage.src = imgSrc;
+        });
+    });
+</script>
+{% endblock %}
