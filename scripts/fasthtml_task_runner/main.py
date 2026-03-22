@@ -73,15 +73,22 @@ def update_execution_status(exec_id, status, logs=None):
     conn.commit()
     conn.close()
 
-def get_executions(limit=20):
-    """Get recent executions from the database"""
+def get_executions(page=1, page_size=10):
+    """Get executions from the database with pagination"""
+    offset = (page - 1) * page_size
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
+    # Sort by ID descending as requested
     c.execute(
-        "SELECT id, prompt, model, workspace, status, logs, created_at FROM executions ORDER BY created_at DESC LIMIT ?",
-        (limit,)
+        "SELECT id, prompt, model, workspace, status, logs, created_at FROM executions ORDER BY id DESC LIMIT ? OFFSET ?",
+        (page_size, offset)
     )
     rows = c.fetchall()
+    
+    # Get total count for pagination
+    c.execute("SELECT COUNT(*) FROM executions")
+    total_count = c.fetchone()[0]
+    
     conn.close()
     return [
         {
@@ -94,7 +101,7 @@ def get_executions(limit=20):
             "created_at": row[6]
         }
         for row in rows
-    ]
+    ], total_count
 
 def get_execution(exec_id):
     """Get a single execution by ID from the database"""
@@ -117,6 +124,53 @@ def get_execution(exec_id):
             "created_at": row[6]
         }
     return None
+
+def render_history(page=1):
+    page_size = 10
+    executions, total_count = get_executions(page, page_size)
+    total_pages = (total_count + page_size - 1) // page_size
+    
+    pagination_controls = []
+    if total_pages > 1:
+        # Prev button
+        if page > 1:
+            pagination_controls.append(Button("Prev", hx_get=f"/history?page={page-1}", hx_target="#history-container", cls="outline small"))
+        
+        # Page info
+        pagination_controls.append(Span(f"Page {page} of {total_pages}"))
+        
+        # Next button
+        if page < total_pages:
+            pagination_controls.append(Button("Next", hx_get=f"/history?page={page+1}", hx_target="#history-container", cls="outline small"))
+
+    return Div(
+        H3("Execution History"),
+        Table(
+            Thead(
+                Tr(
+                    Th("ID"),
+                    Th("Prompt"),
+                    Th("Model"),
+                    Th("Workspace"),
+                    Th("Status"),
+                    Th("Created At")
+                )
+            ),
+            Tbody(
+                *[Tr(
+                    Td(A(str(exec["id"]), hx_get=f"/execution/{exec['id']}", hx_target="#modal-placeholder")),
+                    Td(exec["prompt"][:50] + ("..." if len(exec["prompt"]) > 50 else "")),
+                    Td(exec["model"]),
+                    Td(exec["workspace"]),
+                    Td(exec["status"], cls=f"status-{exec['status']}"),
+                    Td(exec["created_at"])
+                ) for exec in executions]
+            ) if executions else Tr(Td("No executions yet", colspan=6)),
+            cls="history-table"
+        ),
+        Div(*pagination_controls, cls="pagination-container")
+    )
+
 
 
 # Initialize database on startup
@@ -201,6 +255,16 @@ app, rt = fast_app(
                 width: 90%;
                 max-width: 1200px;
             }
+            .pagination-container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-top: 1rem;
+                gap: 1rem;
+            }
+            .pagination-container button {
+                margin-bottom: 0;
+            }
         """),
     )
 )
@@ -208,13 +272,11 @@ app, rt = fast_app(
 @rt("/")
 def get():
     """Render the main page with form and history"""
-    executions = get_executions()
-    
     return Titled("Task Runner",
         Div(
             # Form section
             Form(
-                H2("Execute Task"),
+                H3("Execute Task"),
                 Label("Prompt:", fr="prompt"),
                 Textarea(name="prompt", id="prompt", rows=4, required=True),
                 Label("Model:", fr="model"),
@@ -245,34 +307,14 @@ def get():
             Div(id="modal-placeholder"),
             
             # History section
-            Div(
-                H2("Execution History"),
-                Table(
-                    Thead(
-                        Tr(
-                            Th("ID"),
-                            Th("Prompt"),
-                            Th("Model"),
-                            Th("Workspace"),
-                            Th("Status"),
-                            Th("Created At")
-                        )
-                    ),
-                    Tbody(
-                        *[Tr(
-                            Td(A(str(exec["id"]), hx_get=f"/execution/{exec['id']}", hx_target="#modal-placeholder")),
-                            Td(exec["prompt"][:50] + ("..." if len(exec["prompt"]) > 50 else "")),
-                            Td(exec["model"]),
-                            Td(exec["workspace"]),
-                            Td(exec["status"], cls=f"status-{exec['status']}"),
-                            Td(exec["created_at"])
-                        ) for exec in executions]
-                    ) if executions else Tr(Td("No executions yet", colspan=6))
-                ),
-                cls="history-table"
-            )
+            Div(render_history(1), id="history-container")
         )
     )
+
+@rt("/history")
+def get(page: int = 1):
+    """Handle pagination for history table"""
+    return render_history(page)
 
 @rt("/execute")
 async def post(request):
@@ -329,7 +371,7 @@ async def post(request):
     
     # Return initial response with the execution container and a script to handle real-time logs
     return Div(
-        H3(f"Execution #{exec_id} started"),
+        H4(f"Execution #{exec_id} started"),
         Div(
             id=f"terminal-output-{exec_id}",
             cls="terminal",

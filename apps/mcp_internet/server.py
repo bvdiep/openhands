@@ -4,6 +4,7 @@ MCP Server for Internet Search with Serper, VoyageAI, and Trafilatura
 """
 
 import asyncio
+import base64
 import json
 import os
 import re
@@ -13,8 +14,9 @@ from urllib.parse import urlparse
 import httpx
 import trafilatura
 import voyageai
+from playwright.async_api import async_playwright
 from dotenv import load_dotenv
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP, Image
 
 # Load environment variables
 load_dotenv()
@@ -211,6 +213,64 @@ async def internet_search_tool(query: str, max_results: int = 5) -> str:
         max_results = 1
         
     return await internet_search(query, max_results)
+
+@mcp.tool()
+async def take_screenshot(
+    url: str,
+    width: int = 1280,
+    full_page: bool = False,
+    username: Optional[str] = None,
+    password: Optional[str] = None
+) -> Image:
+    """
+    Take a screenshot of a website.
+    
+    Args:
+        url: The URL to capture
+        width: Viewport width (default: 1280)
+        full_page: Whether to take a screenshot of the entire page (default: False)
+        username: Basic authentication username (optional)
+        password: Basic authentication password (optional)
+    
+    Returns:
+        A screenshot of the website.
+    """
+    async with async_playwright() as p:
+        # Use system's chrome if available
+        executable_path = "/usr/bin/google-chrome"
+        if not os.path.exists(executable_path):
+            executable_path = None
+            
+        browser = await p.chromium.launch(executable_path=executable_path, headless=True)
+        
+        # Setup context with viewport and auth if provided
+        context_options = {
+            "viewport": {"width": width, "height": 1080}
+        }
+        
+        if username and password:
+            context_options["http_credentials"] = {
+                "username": username,
+                "password": password
+            }
+            
+        context = await browser.new_context(**context_options)
+        page = await context.new_page()
+        
+        try:
+            # Set timeout to 30s
+            await page.goto(url, wait_until="networkidle", timeout=30000)
+            # Give it an extra second to settle
+            await asyncio.sleep(1)
+            
+            screenshot_bytes = await page.screenshot(full_page=full_page)
+            await browser.close()
+            
+            return Image(data=screenshot_bytes, format="png")
+        except Exception as e:
+            await browser.close()
+            raise Exception(f"Failed to take screenshot: {str(e)}")
+
 
 if __name__ == "__main__":
     mcp.run()
