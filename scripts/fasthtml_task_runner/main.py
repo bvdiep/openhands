@@ -7,6 +7,12 @@ import threading
 from datetime import datetime
 from fasthtml.common import *
 from starlette.responses import StreamingResponse
+from dotenv import load_dotenv
+
+load_dotenv()
+
+LOGIN_USER = os.getenv("LOGIN_USER", "admin")
+LOGIN_PASS = os.getenv("LOGIN_PASS", "bsm4321")
 
 # Add the root directory to sys.path so we can import the engine module
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
@@ -206,8 +212,14 @@ class QueueWriter:
         return getattr(sys.__stdout__, 'encoding', 'utf-8')
 
 # FastHTML app setup
+def auth_before(request, session):
+    path = request.scope['path']
+    if path in ['/login', '/favicon.ico', '/static']: return
+    if 'auth' not in session: return RedirectResponse('/login', status_code=303)
+
 app, rt = fast_app(
     pico=True,
+    before=auth_before,
     hdrs=(
         Style("""
             .terminal { 
@@ -270,13 +282,14 @@ app, rt = fast_app(
 )
 
 @rt("/")
-def get():
+def get(session):
     """Render the main page with form and history"""
     return Titled("Task Runner",
         Div(
             # Form section
             Form(
                 H3("Execute Task"),
+                A("Logout", href="/logout", style="float: right"),
                 Label("Prompt:", fr="prompt"),
                 Textarea(name="prompt", id="prompt", rows=4, required=True),
                 Label("Model:", fr="model"),
@@ -476,5 +489,52 @@ def get_execution_detail(exec_id: int):
         open=True,
         id="execution-modal"
     )
+
+@rt("/login")
+def get():
+    return Titled("Task runner",
+        Main(
+            Card(
+                Form(
+                    Label("Username", fr="username"),
+                    Input(type="text", name="username", id="username", required=True),
+                    Label("Password", fr="password"),
+                    Input(type="password", name="password", id="password", required=True),
+                    Button("Login", type="submit"),
+                    action="/login", method="post"
+                ),
+                header=Header(H2("Authentication Required"))
+            ),
+            cls="container", style="max-width: 400px; margin-top: 100px;"
+        )
+    )
+
+@rt("/login")
+def post(username: str, password: str, session):
+    if username == LOGIN_USER and password == LOGIN_PASS:
+        session['auth'] = username
+        return RedirectResponse("/", status_code=303)
+    return Titled("Task runner",
+        Main(
+            Card(
+                P("Invalid username or password", style="color: red"),
+                Form(
+                    Label("Username", fr="username"),
+                    Input(type="text", name="username", id="username", required=True),
+                    Label("Password", fr="password"),
+                    Input(type="password", name="password", id="password", required=True),
+                    Button("Login", type="submit"),
+                    action="/login", method="post"
+                ),
+                header=Header(H2("Authentication Required"))
+            ),
+            cls="container", style="max-width: 400px; margin-top: 100px;"
+        )
+    )
+
+@rt("/logout")
+def get(session):
+    session.pop('auth', None)
+    return RedirectResponse("/login", status_code=303)
 
 serve()

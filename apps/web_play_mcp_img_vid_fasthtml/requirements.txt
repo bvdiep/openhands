@@ -2,3 +2,4 @@ python-fasthtml
 python-multipart
 uvicorn
 mcp
+python-dotenv

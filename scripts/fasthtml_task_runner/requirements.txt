@@ -2,3 +2,4 @@ python-fasthtml
 python-multipart
 uvicorn
 sqlite-minutils
+python-dotenv

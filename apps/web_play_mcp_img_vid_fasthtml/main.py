@@ -6,9 +6,16 @@ import uuid
 import re
 import time
 from pathlib import Path
+from dotenv import load_dotenv
 from fasthtml.common import *
 from starlette.staticfiles import StaticFiles
 from starlette.datastructures import UploadFile
+from starlette.responses import RedirectResponse
+
+# Load environment variables
+load_dotenv()
+LOGIN_USER = os.getenv("LOGIN_USER", "admin")
+LOGIN_PASSWORD = os.getenv("LOGIN_PASSWORD", "admin")
 
 # Paths
 MCP_DIR = os.path.abspath("/home/dd/work/diep/openhands/apps/mcp_gen_img_vid_with_refs")
@@ -47,9 +54,17 @@ def get_tools_schema():
 
 tools_schema = get_tools_schema()
 
+# Auth check
+def before_auth(req, session):
+    auth = session.get('auth')
+    if not auth and req.scope['path'] not in ['/login', '/logout']:
+        return RedirectResponse('/login', status_code=303)
+
 app, rt = fast_app(
     pico=True,
     static_path='static',
+    before=before_auth,
+    secret_key=os.getenv("SECRET_KEY", "some-very-secret-key-123"),
     hdrs=(
         Style("""
             .scrollable { max-height: 80vh; overflow-y: auto; }
@@ -234,11 +249,56 @@ def get_gallery_items():
             )
     return items
 
+
+@rt("/login")
+def get():
+    return Titled("MCP Control Center", 
+        Main(
+            Card(
+                Form(
+                    Label("Username", Input(type="text", name="username", placeholder="Username")),
+                    Label("Password", Input(type="password", name="password", placeholder="Password")),
+                    Button("Login", cls="contrast"),
+                    method="post"
+                ),
+                header=Header(H2("Authentication Required"))
+            ),
+            cls="container", style="max-width: 400px; margin-top: 100px;"
+        )
+    )
+
+@rt("/login")
+def post(username: str, password: str, session):
+    if username == LOGIN_USER and password == LOGIN_PASSWORD:
+        session['auth'] = username
+        return RedirectResponse('/', status_code=303)
+    return Titled("MCP Control Center", 
+        Main(
+            Card(
+                P("Invalid username or password", style="color: red;"),
+                Form(
+                    Label("Username", Input(type="text", name="username", placeholder="Username")),
+                    Label("Password", Input(type="password", name="password", placeholder="Password")),
+                    Button("Login", cls="contrast"),
+                    method="post"
+                ),
+                header=Header(H2("Authentication Required"))
+            ),
+            cls="container", style="max-width: 400px; margin-top: 100px;"
+        )
+    )
+
+@rt("/logout")
+def get(session):
+    session.pop('auth', None)
+    return RedirectResponse('/login', status_code=303)
+
 @rt("/")
 def get():
     tool_options = [Option(t, value=t) for t in tools_schema.keys()]
     
     return Titled("Hạ Vy - MCP Control Center",
+        Div(A("Logout", href="/logout"), style="text-align: right; margin-bottom: 10px;"),
         Grid(
             # Left Column: Form
             Div(
