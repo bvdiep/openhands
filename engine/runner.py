@@ -33,7 +33,7 @@ class TaskRunner:
             mcp_config: Optional MCP configuration.
             system_prompt: Optional system prompt for the agent.
         """
-        self.workspace = os.path.abspath(workspace)
+        self.workspace = os.path.abspath(os.path.expanduser(workspace))
         self.model = model or LLM_CONFIG.get("model")
         self.base_url = base_url or LLM_CONFIG.get("base_url")
         self.api_key = api_key or LLM_CONFIG.get("api_key")
