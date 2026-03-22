@@ -1,3 +1,4 @@
+# Note: mcp này đã nâng cấp cho thêm cả veo3 vào rồi, và các tham số cũng linh động hơn
 import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
