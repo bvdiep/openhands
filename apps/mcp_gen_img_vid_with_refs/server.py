@@ -49,7 +49,7 @@ def generate_custom_scene_image(
                     return f"Error: Item reference image not found at {path}"
             
         # Ensure outputs directory exists
-        output_dir = Path("./outputs")
+        output_dir = Path(__file__).parent / "outputs"
         output_dir.mkdir(exist_ok=True)
         
         # Initialize Google GenAI client
@@ -139,7 +139,7 @@ def generate_video_from_scene_image(
             return f"Error: Image not found at {image_path}"
 
         # Ensure outputs directory exists
-        output_dir = Path("./outputs")
+        output_dir = Path(__file__).parent / "outputs"
         output_dir.mkdir(exist_ok=True)
 
         # Initialize Google GenAI client

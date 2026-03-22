@@ -1,0 +1,10 @@
+{
+  "apps": [
+    {
+      "name": "web_play_mcp_img_vid",
+      "script": ".venv/bin/streamlit",
+      "args": "run app.py --server.headless true",
+      "interpreter": "none"
+    }
+  ]
+}
