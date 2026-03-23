@@ -79,12 +79,13 @@ class TaskRunner:
             success_message: Message to display upon successful completion.
             
         Returns:
-            bool: True if successful, False otherwise.
+            tuple: (bool, dict) - (Success status, Metrics dictionary)
         """
         print(f"🚀 OpenHands Runner starting at: {self.workspace}")
         print(f"🤖 Model: {self.model}")
         
         conversation = None
+        metrics = {}
         try:
             conversation = Conversation(agent=self.agent, workspace=self.workspace)
             conversation.send_message(task_prompt)
@@ -92,13 +93,23 @@ class TaskRunner:
             print("--- Đang thực thi ---")
             conversation.run()
             
+            # Extract metrics
+            if hasattr(self.llm, 'metrics'):
+                m = self.llm.metrics
+                metrics = {
+                    "prompt_tokens": m.accumulated_token_usage.prompt_tokens,
+                    "completion_tokens": m.accumulated_token_usage.completion_tokens,
+                    "total_tokens": m.accumulated_token_usage.prompt_tokens + m.accumulated_token_usage.completion_tokens,
+                    "cost": m.accumulated_cost
+                }
+            
             print(f"\n✅ {success_message}")
-            return True
+            return True, metrics
             
         except Exception as e:
             print(f"\n❌ Lỗi thực thi: {e}")
             traceback.print_exc()
-            return False
+            return False, metrics
             
         finally:
             if conversation:
@@ -119,8 +130,11 @@ def run_task(task_prompt: str, **kwargs):
             - system_prompt (optional)
             - success_message (optional)
             
+    Returns:
+        tuple: (bool, dict) - (Success status, Metrics dictionary)
+            
     Usage:
-        run_task(task_prompt="...", workspace="./path", model="...")
+        success, metrics = run_task(task_prompt="...", workspace="./path", model="...")
     """
     success_msg = kwargs.pop('success_message', "Nhiệm vụ hoàn tất!")
     

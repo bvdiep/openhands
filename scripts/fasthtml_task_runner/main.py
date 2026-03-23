@@ -38,6 +38,10 @@ def init_db():
             workspace TEXT NOT NULL,
             status TEXT NOT NULL,
             logs TEXT,
+            prompt_tokens INTEGER,
+            completion_tokens INTEGER,
+            total_tokens INTEGER,
+            cost REAL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -46,6 +50,14 @@ def init_db():
     columns = [column[1] for column in c.fetchall()]
     if 'logs' not in columns:
         c.execute("ALTER TABLE executions ADD COLUMN logs TEXT")
+    if 'prompt_tokens' not in columns:
+        c.execute("ALTER TABLE executions ADD COLUMN prompt_tokens INTEGER")
+    if 'completion_tokens' not in columns:
+        c.execute("ALTER TABLE executions ADD COLUMN completion_tokens INTEGER")
+    if 'total_tokens' not in columns:
+        c.execute("ALTER TABLE executions ADD COLUMN total_tokens INTEGER")
+    if 'cost' not in columns:
+        c.execute("ALTER TABLE executions ADD COLUMN cost REAL")
     conn.commit()
     conn.close()
 
@@ -62,20 +74,33 @@ def add_execution(prompt, model, workspace):
     conn.close()
     return exec_id
 
-def update_execution_status(exec_id, status, logs=None):
-    """Update the status and logs of an execution"""
+def update_execution_status(exec_id, status, logs=None, prompt_tokens=None, completion_tokens=None, total_tokens=None, cost=None):
+    """Update the status, logs and metrics of an execution"""
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
+    update_fields = ["status = ?"]
+    params = [status]
+    
     if logs is not None:
-        c.execute(
-            "UPDATE executions SET status = ?, logs = ? WHERE id = ?",
-            (status, logs, exec_id)
-        )
-    else:
-        c.execute(
-            "UPDATE executions SET status = ? WHERE id = ?",
-            (status, exec_id)
-        )
+        update_fields.append("logs = ?")
+        params.append(logs)
+    if prompt_tokens is not None:
+        update_fields.append("prompt_tokens = ?")
+        params.append(prompt_tokens)
+    if completion_tokens is not None:
+        update_fields.append("completion_tokens = ?")
+        params.append(completion_tokens)
+    if total_tokens is not None:
+        update_fields.append("total_tokens = ?")
+        params.append(total_tokens)
+    if cost is not None:
+        update_fields.append("cost = ?")
+        params.append(cost)
+        
+    params.append(exec_id)
+    query = f"UPDATE executions SET {', '.join(update_fields)} WHERE id = ?"
+    c.execute(query, tuple(params))
+    
     conn.commit()
     conn.close()
 
@@ -86,7 +111,7 @@ def get_executions(page=1, page_size=10):
     c = conn.cursor()
     # Sort by ID descending as requested
     c.execute(
-        "SELECT id, prompt, model, workspace, status, logs, created_at FROM executions ORDER BY id DESC LIMIT ? OFFSET ?",
+        "SELECT id, prompt, model, workspace, status, logs, created_at, prompt_tokens, completion_tokens, total_tokens, cost FROM executions ORDER BY id DESC LIMIT ? OFFSET ?",
         (page_size, offset)
     )
     rows = c.fetchall()
@@ -104,7 +129,11 @@ def get_executions(page=1, page_size=10):
             "workspace": row[3],
             "status": row[4],
             "logs": row[5],
-            "created_at": row[6]
+            "created_at": row[6],
+            "prompt_tokens": row[7],
+            "completion_tokens": row[8],
+            "total_tokens": row[9],
+            "cost": row[10]
         }
         for row in rows
     ], total_count
@@ -114,7 +143,7 @@ def get_execution(exec_id):
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute(
-        "SELECT id, prompt, model, workspace, status, logs, created_at FROM executions WHERE id = ?",
+        "SELECT id, prompt, model, workspace, status, logs, created_at, prompt_tokens, completion_tokens, total_tokens, cost FROM executions WHERE id = ?",
         (exec_id,)
     )
     row = c.fetchone()
@@ -127,7 +156,11 @@ def get_execution(exec_id):
             "workspace": row[3],
             "status": row[4],
             "logs": row[5],
-            "created_at": row[6]
+            "created_at": row[6],
+            "prompt_tokens": row[7],
+            "completion_tokens": row[8],
+            "total_tokens": row[9],
+            "cost": row[10]
         }
     return None
 
@@ -157,8 +190,8 @@ def render_history(page=1):
                     Th("ID"),
                     Th("Prompt"),
                     Th("Model"),
-                    Th("Workspace"),
                     Th("Status"),
+                    Th("Tokens/Cost"),
                     Th("Created At")
                 )
             ),
@@ -167,8 +200,8 @@ def render_history(page=1):
                     Td(A(str(exec["id"]), hx_get=f"/execution/{exec['id']}", hx_target="#modal-placeholder")),
                     Td(exec["prompt"][:50] + ("..." if len(exec["prompt"]) > 50 else "")),
                     Td(exec["model"]),
-                    Td(exec["workspace"]),
                     Td(exec["status"], cls=f"status-{exec['status']}"),
+                    Td(f"{exec['total_tokens'] or 0} / ${exec['cost'] or 0:.4f}"),
                     Td(exec["created_at"])
                 ) for exec in executions]
             ) if executions else Tr(Td("No executions yet", colspan=6)),
@@ -354,6 +387,7 @@ async def post(request):
         old_stdout = sys.stdout
         writer = QueueWriter(q, loop)
         sys.stdout = writer
+        metrics = {}
         try:
             # Import here to avoid circular imports
             from engine.runner import TaskRunner
@@ -363,16 +397,33 @@ async def post(request):
                 model=model
                 # Other parameters can be added from form if needed
             )
-            runner.run(prompt, success_message="Nhiệm vụ hoàn tất!")
-            # Update status to success with logs
-            update_execution_status(exec_id, "success", writer.get_logs())
+            success, metrics = runner.run(prompt, success_message="Nhiệm vụ hoàn tất!")
+            # Update status to success/error with logs and metrics
+            status = "success" if success else "error"
+            update_execution_status(
+                exec_id, 
+                status, 
+                writer.get_logs(),
+                prompt_tokens=metrics.get("prompt_tokens"),
+                completion_tokens=metrics.get("completion_tokens"),
+                total_tokens=metrics.get("total_tokens"),
+                cost=metrics.get("cost")
+            )
         except Exception as e:
             # Log the error
             sys.stdout.write(f"Error: {str(e)}\n")
             import traceback
             traceback.print_exc()
             # Update status to error with logs
-            update_execution_status(exec_id, "error", writer.get_logs())
+            update_execution_status(
+                exec_id, 
+                "error", 
+                writer.get_logs(),
+                prompt_tokens=metrics.get("prompt_tokens"),
+                completion_tokens=metrics.get("completion_tokens"),
+                total_tokens=metrics.get("total_tokens"),
+                cost=metrics.get("cost")
+            )
         finally:
             # Restore stdout
             sys.stdout = old_stdout
@@ -471,12 +522,17 @@ def get_execution_detail(exec_id: int):
         Article(
             Header(
                 Button(aria_label="Close", cls="close", onclick="this.closest('dialog').removeAttribute('open')", type="button"),
-                P(Strong(f"Execution Details #{exec_id}"))
+                P(Strong(f"Execution Details #{exec_id} - {exec_data["created_at"]}"))
             ),
             Div(
-                P(Strong("ID: "), str(exec_data["id"]), " (ngày ", exec_data["created_at"], ", status ", Span(exec_data["status"], cls=f"status-{exec_data['status']}"), ")"),
-                P(Strong("Model: "), exec_data["model"]),
+                P(Strong("Status: "), Span(exec_data["status"], cls=f"status-{exec_data['status']}"), " - ", exec_data["model"]),
                 P(Strong("Workspace: "), exec_data["workspace"]),
+                Grid(
+                    Div(P(Strong("Prompt Tokens: ")), P(str(exec_data["prompt_tokens"] or 0))),
+                    Div(P(Strong("Completion Tokens: ")), P(str(exec_data["completion_tokens"] or 0))),
+                    Div(P(Strong("Total Tokens: ")), P(str(exec_data["total_tokens"] or 0))),
+                    Div(P(Strong("Total Cost: ")), P(f"${exec_data['cost'] or 0:.4f}"))
+                ),
                 P(Strong("Prompt:")),
                 Pre(exec_data["prompt"], style="white-space: pre-wrap; background: #f4f4f4; padding: 10px; border-radius: 4px;"),
                 P(Strong("Logs:")),
