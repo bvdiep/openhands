@@ -29,16 +29,16 @@ Execution = executions.dataclass()
 hdrs = (
     Link(rel="stylesheet", href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css"),
     Style("""
-        :root { --pico-font-size: 0.9rem; }
+        :root { --pico-font-size: 1rem; }
         main.container { padding-top: 1rem; }
         h1 { font-size: 1.5rem; }
         h3 { font-size: 1.2rem; }
         pre { white-space: pre-wrap; padding: 1rem; border-radius: 8px; background-color: var(--pico-code-background-color); }
-        .loading-spinner { border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; width: 16px; height: 16px; animation: spin 2s linear infinite; display: inline-block; margin-right: 8px; }
+        .loading-spinner { border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; width: 16px; height: 16px; animation: spin 2s linear infinite; display: inline-block; margin-right: 8px; vertical-align: middle; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #loading { display: none; }
+        .htmx-request#loading { display: inline-block; }
         .htmx-request #loading { display: inline-block; }
-        .htmx-request #submit-btn { opacity: 0.5; pointer-events: none; }
     """)
 )
 app, rt = fast_app(hdrs=hdrs)
@@ -93,14 +93,14 @@ def ExecutionTable(page=1, per_page=10):
 
 @rt("/")
 def get(page: int = 1):
-    form = Form(method="post", hx_post="/", hx_target="#result", hx_indicator="#loading")(
+    form = Form(method="post", hx_post="/", hx_target="#result", hx_indicator="#loading", hx_disabled_elt="#submit-btn")(
         Grid(
-            Div(Label("Model", Input(name="model", value=os.getenv("MODEL", "gpt-3.5-turbo")))),
-            Div(Label("Temperature", Input(name="temperature", type="number", step="0.1", value=os.getenv("TEMPERATURE", "0.7")))),
-            Div(Label("Max Tokens", Input(name="max_tokens", type="number", value=os.getenv("MAX_TOKENS", "1000")))),
+            Div(Label("Model", Input(name="model", value=os.getenv("MODEL", "gpt-3.5-turbo"), required=True))),
+            Div(Label("Temperature", Input(name="temperature", type="number", step="0.1", value=os.getenv("TEMPERATURE", "0.7"), required=True))),
+            Div(Label("Max Tokens", Input(name="max_tokens", type="number", value=os.getenv("MAX_TOKENS", "1000"), required=True))),
         ),
-        Label("System Prompt", Textarea(name="system_prompt", rows=3, placeholder="You are a helpful assistant.")),
-        Label("User Query", Textarea(name="user_query", rows=5, placeholder="Enter your query here...")),
+        Label("System Prompt", Textarea(name="system_prompt", rows=3, placeholder="You are a helpful assistant.", required=True)),
+        Label("User Query", Textarea(name="user_query", rows=5, placeholder="Enter your query here...", required=True)),
         Button(Span(cls="loading-spinner", id="loading"), "Submit", type="submit", id="submit-btn"),
     )
     
