@@ -1,0 +1,5 @@
+python-fasthtml==0.12.50
+litellm
+python-dotenv
+sse-starlette==3.3.3
+starlette==0.52.1
