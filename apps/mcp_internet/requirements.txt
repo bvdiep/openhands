@@ -1,6 +1,0 @@
-mcp>=1.26.0
-python-dotenv>=1.2.1
-httpx>=0.28.1
-trafilatura>=2.0.0
-voyageai>=0.3.7
-playwright>=1.58.0
