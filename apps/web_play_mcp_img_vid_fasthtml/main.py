@@ -11,6 +11,8 @@ from fasthtml.common import *
 from starlette.staticfiles import StaticFiles
 from starlette.datastructures import UploadFile
 from starlette.responses import RedirectResponse
+import sqlite3
+
 
 # Load environment variables
 load_dotenv()
@@ -24,6 +26,30 @@ UPLOADS_DIR = os.path.abspath("/home/dd/work/diep/openhands/apps/web_play_mcp_im
 VENV_PYTHON = os.path.join(MCP_DIR, ".venv", "bin", "python")
 
 os.makedirs(OUTPUTS_DIR, exist_ok=True)
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "history.db")
+
+def log_generation(tool_name, prompt, input_paths, output_path, kwargs, status, error_msg=None):
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO generation_history (tool_name, prompt, input_paths, output_path, kwargs, status, error_msg)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            tool_name,
+            prompt,
+            json.dumps(input_paths),
+            output_path,
+            json.dumps(kwargs, default=str),
+            status,
+            error_msg
+        ))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error logging to database: {e}")
+
+
 os.makedirs(UPLOADS_DIR, exist_ok=True)
 
 # Extract schema
@@ -395,6 +421,17 @@ async def post(request):
                 else:
                     kwargs[prop_name] = val
                     
+    # Prepare data for logging
+    input_paths = []
+    for k, v in kwargs.items():
+        if isinstance(v, str) and (v.startswith(UPLOADS_DIR) or v.startswith(OUTPUTS_DIR) or v.startswith("/tmp")):
+            input_paths.append(v)
+        elif isinstance(v, list):
+            for item in v:
+                if isinstance(item, str) and (item.startswith(UPLOADS_DIR) or item.startswith(OUTPUTS_DIR) or item.startswith("/tmp")):
+                    input_paths.append(item)
+    prompt = kwargs.get("prompt", "")
+
     # Execute tool via subprocess
     start_time = time.time()
     print(f"\n[MCP] Executing tool: {tool_name}")
@@ -444,12 +481,14 @@ asyncio.run(main())
         
         if process.returncode != 0:
             print(f"[MCP] Subprocess error: {process.stderr}")
+            log_generation(tool_name, prompt, input_paths, None, kwargs, "error", f"Subprocess error: {process.stderr}")
             return Div(Ins(f"Subprocess error: {process.stderr}", cls="error-msg"))
             
         try:
             out = json.loads(process.stdout)
             if out.get("status") == "error":
                 print(f"[MCP] Tool error: {out.get('error')}")
+                log_generation(tool_name, prompt, input_paths, None, kwargs, "error", f"Tool error: {out.get('error')}")
                 return Div(Ins(f"Tool error: {out.get('error')}", cls="error-msg"))
                 
             result = out.get("result")
@@ -515,20 +554,26 @@ asyncio.run(main())
                     url = f"/outputs/{filename}" 
                 
                 if ext in ['png', 'jpg', 'jpeg', 'gif', 'webp']:
+                    log_generation(tool_name, prompt, input_paths, found_path, kwargs, "success")
                     return Div(Img(src=url), gallery_update)
                 elif ext in ['mp4', 'webm']:
+                    log_generation(tool_name, prompt, input_paths, found_path, kwargs, "success")
                     return Div(Video(src=url, controls=True, autoplay=True), gallery_update)
             
             # Only show result text if no file path found
+            log_generation(tool_name, prompt, input_paths, found_path, kwargs, "success")
             return Div(P(f"Result: {text_result}"), gallery_update)
             
         except json.JSONDecodeError:
+            log_generation(tool_name, prompt, input_paths, None, kwargs, "error", f"Invalid JSON output: {process.stdout}")
             return Div(Ins(f"Invalid JSON output: {process.stdout}", cls="error-msg"))
             
     except subprocess.TimeoutExpired:
         os.remove(script_path)
+        log_generation(tool_name, prompt, input_paths, None, kwargs, "error", "Execution timed out")
         return Div(Ins("Execution timed out", cls="error-msg"))
     except Exception as e:
+        log_generation(tool_name, prompt, input_paths, None, kwargs, "error", str(e))
         return Div(Ins(f"Execution failed: {str(e)}", cls="error-msg"))
 
 serve()
