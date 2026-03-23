@@ -28,6 +28,30 @@ VENV_PYTHON = os.path.join(MCP_DIR, ".venv", "bin", "python")
 os.makedirs(OUTPUTS_DIR, exist_ok=True)
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "history.db")
 
+def init_db():
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS generation_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                tool_name TEXT NOT NULL,
+                prompt TEXT,
+                input_paths TEXT,
+                output_path TEXT,
+                kwargs TEXT,
+                status TEXT,
+                error_msg TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error initializing database: {e}")
+
+init_db()
+
 def log_generation(tool_name, prompt, input_paths, output_path, kwargs, status, error_msg=None):
     try:
         conn = sqlite3.connect(DB_PATH)
