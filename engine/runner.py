@@ -70,28 +70,30 @@ class TaskRunner:
         # Ensure workspace exists
         os.makedirs(self.workspace, exist_ok=True)
             
-    def run(self, task_prompt: str, success_message: str = "Nhiệm vụ hoàn tất!"):
-        """
-        Execute the task.
-        
-        Args:
-            task_prompt: The prompt describing the task to perform.
-            success_message: Message to display upon successful completion.
-            
-        Returns:
-            tuple: (bool, dict) - (Success status, Metrics dictionary)
-        """
-        print(f"🚀 OpenHands Runner starting at: {self.workspace}")
+    def start_session(self):
+        """Initialize the single conversation session."""
+        print(f"🚀 OpenHands Runner session starting at: {self.workspace}")
         print(f"🤖 Model: {self.model}")
-        
-        conversation = None
         metrics = {}
         try:
-            conversation = Conversation(agent=self.agent, workspace=self.workspace)
-            conversation.send_message(task_prompt)
-            
+            self.conversation = Conversation(agent=self.agent, workspace=self.workspace)
+            return True, metrics
+        except Exception as e:
+            print(f"\n❌ Lỗi khởi tạo session: {e}")
+            traceback.print_exc()
+            return False, metrics
+
+    def send_task(self, task_prompt: str, success_message: str = "Nhiệm vụ hoàn tất!"):
+        """Send a task to an existing session."""
+        metrics = {}
+        if not hasattr(self, 'conversation') or self.conversation is None:
+            print("\n❌ Lỗi: Session chưa được khởi tạo.")
+            return False, metrics
+
+        try:
+            self.conversation.send_message(task_prompt)
             print("--- Đang thực thi ---")
-            conversation.run()
+            self.conversation.run()
             
             # Extract metrics
             if hasattr(self.llm, 'metrics'):
@@ -102,18 +104,43 @@ class TaskRunner:
                     "total_tokens": m.accumulated_token_usage.prompt_tokens + m.accumulated_token_usage.completion_tokens,
                     "cost": m.accumulated_cost
                 }
-            
             print(f"\n✅ {success_message}")
             return True, metrics
-            
         except Exception as e:
             print(f"\n❌ Lỗi thực thi: {e}")
             traceback.print_exc()
             return False, metrics
+
+    def close_session(self):
+        """Close the active session."""
+        if hasattr(self, 'conversation') and self.conversation:
+            try:
+                self.conversation.close()
+            except Exception as e:
+                print(f"Lỗi khi đóng session: {e}")
+            self.conversation = None
+
+    def run(self, task_prompt: str, success_message: str = "Nhiệm vụ hoàn tất!"):
+        """
+        Execute the task (Single Turn) - Backward compatibility.
+        
+        Args:
+            task_prompt: The prompt describing the task to perform.
+            success_message: Message to display upon successful completion.
             
+        Returns:
+            tuple: (bool, dict) - (Success status, Metrics dictionary)
+        """
+        success_init, metrics = self.start_session()
+        if not success_init:
+            return False, metrics
+            
+        try:
+            success, run_metrics = self.send_task(task_prompt, success_message)
+            # Update metrics if needed, but start_session metrics are empty
+            return success, run_metrics
         finally:
-            if conversation:
-                conversation.close()
+            self.close_session()
 
 def run_task(task_prompt: str, **kwargs):
     """
