@@ -20,3 +20,5 @@ __pycache__/
 workspaces/
 engine/workspace/
 openhands_operation/workspace/
+scripts/fasthtml_task_runner/oh_editor_history*
+apps/gen_imgs_with_yaml/outputs/
